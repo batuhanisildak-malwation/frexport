@@ -7,6 +7,7 @@ import { detectFramer } from './detector.js';
 import { discoverRoutes } from './discovery.js';
 import { renderAll } from './pool.js';
 import { rewriteText, rewriteAsset } from './rewriter.js';
+import { removeFramerBadge } from './badge.js';
 import { gapFillCss } from './css-gapfill.js';
 import { writeSiteTree, zipDir, type RouteHtml } from './packager.js';
 import { assertPublicUrl } from '../server/url-guard.js';
@@ -74,7 +75,7 @@ export async function runExport(opts: ExportOptions): Promise<ExportResult> {
     const okRoutes = rendered.filter((r) => r.ok);
     const routeHtml: RouteHtml[] = okRoutes.map((r) => ({
       route: routePathOnly(r.route),
-      html: rewriteText(r.html, store, routePathOnly(r.route), base),
+      html: removeFramerBadge(rewriteText(r.html, store, routePathOnly(r.route), base)),
     }));
 
     reporter.emit({ phase: 'package', message: 'Building zip…' });

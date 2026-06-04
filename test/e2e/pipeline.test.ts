@@ -30,6 +30,9 @@ describe('runExport (end-to-end)', () => {
     expect(home).toMatch(/assets\/[0-9a-f]+\.png/);
     const aboutHtml = await readFile(join(siteDir, 'about', 'index.html'), 'utf8');
     expect(aboutHtml).toContain('About');
+    // Framer "Made in Framer" badge is stripped and suppressed against runtime re-injection
+    expect(home).toContain('frexport-no-badge');
+    expect(home).not.toContain('https://www.framer.com');
     const assets = await readdir(join(siteDir, 'assets'));
     expect(assets.length).toBeGreaterThan(0);
     const stat = await import('node:fs/promises').then((m) => m.stat(zipPath));
