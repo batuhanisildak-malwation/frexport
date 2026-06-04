@@ -2,12 +2,15 @@ import type { Page, Response } from 'playwright';
 import type { AssetStore } from './asset-store.js';
 import type { Reporter } from './reporter.js';
 import { decideLocalization } from './localizer.js';
+import { guardedFetch } from '../server/url-guard.js';
+import type { GuardOptions } from '../server/url-guard.js';
 
 export function attachInterceptor(
   page: Page,
   store: AssetStore,
   reporter: Reporter,
   siteUrl: string,
+  guard?: GuardOptions,
 ): void {
   page.on('response', async (response: Response) => {
     const url = response.url();
@@ -35,7 +38,7 @@ export function attachInterceptor(
     }
 
     try {
-      const res = await fetch(url);
+      const res = await guardedFetch(url, {}, guard);
       if (!res.ok) {
         reporter.assetFailed(url, `status ${res.status}`);
         return;

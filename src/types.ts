@@ -34,6 +34,7 @@ export interface ExportReport {
 }
 
 export type ProgressEvent =
+  | { phase: 'queued'; position: number; message: string }
   | { phase: 'detect'; message: string }
   | { phase: 'discover'; found: number; message: string }
   | { phase: 'render'; route: string; index: number; total: number }

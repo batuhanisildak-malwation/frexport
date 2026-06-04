@@ -1,3 +1,6 @@
+import { guardedFetch } from '../server/url-guard.js';
+import type { GuardOptions } from '../server/url-guard.js';
+
 export interface DetectResult {
   ok: boolean;
   reason?: string;
@@ -5,10 +8,10 @@ export interface DetectResult {
 
 const SIGNATURES = ['framerstatic.com', 'framerusercontent.com', '__framer', 'data-framer'];
 
-export async function detectFramer(url: string): Promise<DetectResult> {
+export async function detectFramer(url: string, guard?: GuardOptions): Promise<DetectResult> {
   let res: Response;
   try {
-    res = await fetch(url, { redirect: 'follow' });
+    res = await guardedFetch(url, {}, guard);
   } catch (err) {
     return { ok: false, reason: `unreachable: ${(err as Error).message}` };
   }

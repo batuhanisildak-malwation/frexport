@@ -12,7 +12,7 @@ describe('attachInterceptor', () => {
     const page = await browser.newPage();
     const store = new AssetStore();
     const reporter = new Reporter(fx.base, () => {});
-    attachInterceptor(page, store, reporter, fx.base);
+    attachInterceptor(page, store, reporter, fx.base, { resolve: async (): Promise<string[]> => ['8.8.8.8'] });
 
     await page.goto(fx.base + '/', { waitUntil: 'load' });
     await page.waitForLoadState('networkidle');
@@ -35,7 +35,7 @@ describe('attachInterceptor', () => {
     const page = await browser.newPage();
     const store = new AssetStore();
     const reporter = new Reporter(fx.base, () => {});
-    attachInterceptor(page, store, reporter, fx.base);
+    attachInterceptor(page, store, reporter, fx.base, { resolve: async (): Promise<string[]> => ['8.8.8.8'] });
 
     await page.goto(fx.base + '/', { waitUntil: 'load' });
     await page.waitForLoadState('networkidle');

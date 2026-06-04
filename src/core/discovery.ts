@@ -1,15 +1,17 @@
 import type { Browser } from 'playwright';
 import { XMLParser } from 'fast-xml-parser';
 import { normalizeRoute, isSameOrigin } from './url-utils.js';
+import { guardedFetch, makeRouteGuard } from '../server/url-guard.js';
+import type { GuardOptions } from '../server/url-guard.js';
 
 interface DiscoveryResult {
   routes: string[];
   maxPagesHit: boolean;
 }
 
-async function fromSitemap(base: string): Promise<string[]> {
+async function fromSitemap(base: string, guard?: GuardOptions): Promise<string[]> {
   try {
-    const res = await fetch(new URL('/sitemap.xml', base).toString());
+    const res = await guardedFetch(new URL('/sitemap.xml', base).toString(), {}, guard);
     if (!res.ok) return [];
     const xml = await res.text();
     const parsed = new XMLParser().parse(xml);
@@ -25,9 +27,12 @@ async function fromSitemap(base: string): Promise<string[]> {
   }
 }
 
-async function linksOnPage(browser: Browser, route: string, base: string): Promise<string[]> {
+async function linksOnPage(
+  browser: Browser, route: string, base: string, guard?: GuardOptions,
+): Promise<string[]> {
   const page = await browser.newPage();
   try {
+    await page.route('**/*', makeRouteGuard(guard));
     await page.goto(route, { waitUntil: 'load', timeout: 45000 });
     await page.waitForLoadState('networkidle').catch(() => {});
     const hrefs = await page.$$eval('a[href]', (els) => els.map((e) => (e as HTMLAnchorElement).href));
@@ -45,13 +50,14 @@ export async function discoverRoutes(
   browser: Browser,
   base: string,
   maxPages: number,
+  guard?: GuardOptions,
 ): Promise<DiscoveryResult> {
   const seen = new Set<string>();
   const queue: string[] = [];
 
   const seed = normalizeRoute(base.endsWith('/') ? base : base + '/');
   queue.push(seed);
-  for (const r of await fromSitemap(base)) queue.push(r);
+  for (const r of await fromSitemap(base, guard)) queue.push(r);
 
   let maxPagesHit = false;
   const result: string[] = [];
@@ -63,7 +69,7 @@ export async function discoverRoutes(
     seen.add(route);
     result.push(route);
 
-    const links = await linksOnPage(browser, route, base);
+    const links = await linksOnPage(browser, route, base, guard);
     for (const link of links) {
       if (!seen.has(link)) queue.push(link);
     }

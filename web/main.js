@@ -108,6 +108,10 @@ form.addEventListener('submit', async (e) => {
     if (PHASES.includes(e.phase)) advanceRail(e.phase);
 
     switch (e.phase) {
+      case 'queued':
+        line(`Queued — position ${e.position}. ${e.message}`);
+        ticker.textContent = 'queued';
+        break;
       case 'detect':
         line(e.message);
         break;

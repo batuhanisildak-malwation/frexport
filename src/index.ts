@@ -1,8 +1,11 @@
 import { buildServer } from './server/server.js';
+import { loadConfig, describeConfig } from './config.js';
 
-const app = buildServer();
-const port = Number(process.env.PORT ?? 3000);
+const config = loadConfig();
+const app = buildServer({ config });
 
-app.listen({ port, host: '127.0.0.1' })
-  .then(() => console.log(`frexport running at http://127.0.0.1:${port}`))
+app.log?.info?.(`frexport config: ${describeConfig(config)}`);
+
+app.listen({ port: config.port, host: config.host })
+  .then(() => console.log(`frexport running at http://${config.host}:${config.port}`))
   .catch((err) => { console.error(err); process.exit(1); });

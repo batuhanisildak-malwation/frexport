@@ -20,6 +20,7 @@ describe('runExport (end-to-end)', () => {
       concurrency: 2,
       maxPages: 50,
       onProgress: () => {},
+      guard: { resolve: async (): Promise<string[]> => ['8.8.8.8'] },
     });
 
     expect(report.routes.exported).toBe(2);

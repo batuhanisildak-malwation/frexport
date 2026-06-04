@@ -1,5 +1,7 @@
 import type { AssetStore } from './asset-store.js';
 import { decideLocalization } from './localizer.js';
+import { guardedFetch } from '../server/url-guard.js';
+import type { GuardOptions } from '../server/url-guard.js';
 
 const URL_RE = /url\(\s*(['"]?)([^'")]+)\1\s*\)/g;
 
@@ -17,7 +19,7 @@ export function extractCssUrls(css: string, cssUrl: string): string[] {
   return out;
 }
 
-export async function gapFillCss(store: AssetStore, siteUrl: string): Promise<void> {
+export async function gapFillCss(store: AssetStore, siteUrl: string, guard?: GuardOptions): Promise<void> {
   const cssEntries = store.entries().filter((e) => e.localPath.endsWith('.css'));
   for (const cssEntry of cssEntries) {
     const file = store.uniqueFiles().find((f) => f.localPath === cssEntry.localPath);
@@ -27,7 +29,7 @@ export async function gapFillCss(store: AssetStore, siteUrl: string): Promise<vo
       if (store.lookup(url)) continue;
       if (decideLocalization(url, siteUrl).kind !== 'localize') continue;
       try {
-        const res = await fetch(url);
+        const res = await guardedFetch(url, {}, guard);
         if (!res.ok) continue;
         const buf = Buffer.from(await res.arrayBuffer());
         store.add(url, buf, res.headers.get('content-type') ?? '');

@@ -75,9 +75,46 @@ npm run typecheck # type-check
 npm run dev       # watch mode
 ```
 
+## Deploy
+
+frexport ships as a Docker image built on the official Playwright base, ready for
+[Railway](https://railway.app):
+
+1. Push this repo to GitHub.
+2. In Railway: **New Project → Deploy from GitHub repo**, and pick it.
+3. Railway reads `railway.json`, builds the `Dockerfile`, and gives you a URL.
+
+`NODE_ENV=production` is baked into the image, so the server binds `0.0.0.0:$PORT`
+automatically — Railway injects `$PORT`. Run it anywhere else the same way:
+
+```bash
+docker build -t frexport .
+docker run -p 3000:3000 frexport
+```
+
+### Public-instance guardrails
+
+A public instance fetches arbitrary user-supplied URLs and drives a real browser,
+so it ships locked down. Every submitted URL — and every page it navigates to — is
+SSRF-checked (scheme, credentials, and DNS-resolved IP ranges), so the server can't
+be steered at private or cloud-metadata addresses. Throughput is capped and tunable
+by environment variable:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `RATE_MAX` / `RATE_WINDOW` | `5` / `10m` | exports per IP per window |
+| `MAX_CONCURRENT` | `2` | parallel exports (the rest queue) |
+| `MAX_QUEUE` | `20` | queued jobs before `503` |
+| `MAX_PAGES` | `25` | pages crawled per export |
+| `EXPORT_TIMEOUT_MS` | `90000` | per-export wall-clock |
+| `MAX_ZIP_MB` | `150` | output size cap |
+| `JOB_TTL_MS` | `900000` | how long a finished zip stays downloadable |
+
+Finished jobs and their zips are swept from memory and disk after `JOB_TTL_MS`.
+
 ## Tech
 
-TypeScript · Playwright (Chromium) · Fastify · Vitest
+TypeScript · Playwright (Chromium) · Fastify · Vitest · Docker
 
 ---
 
